@@ -3,11 +3,21 @@ pragma solidity ^0.8.30;
 
 import "forge-std/Test.sol";
 import {SmartAccount} from "../src/SmartAccount.sol";
-import {Counter} from "../src/Counter.sol";
+
+// Simple test contract to replace Counter
+contract TestTarget {
+    uint256 public value;
+    
+    function inc(uint256 amount) public {
+        value += amount;
+    }
+    
+    receive() external payable {}
+}
 
 contract SmartAccountTest is Test {
     SmartAccount public account;
-    Counter public counter;
+    TestTarget public counter;
     
     address public owner;
     uint256 public ownerPrivateKey;
@@ -30,7 +40,7 @@ contract SmartAccountTest is Test {
         
         // Deploy contracts
         account = new SmartAccount(owner);
-        counter = new Counter();
+        counter = new TestTarget();
         
         // Fund the account
         vm.deal(address(account), 10 ether);
@@ -47,7 +57,7 @@ contract SmartAccountTest is Test {
     }
 
     function testOwnerCanExecute() public {
-        bytes memory data = abi.encodeWithSelector(Counter.inc.selector, 5);
+        bytes memory data = abi.encodeWithSelector(TestTarget.inc.selector, 5);
         
         vm.prank(owner);
         bytes memory result = account.execute(address(counter), 0, data);
@@ -57,7 +67,7 @@ contract SmartAccountTest is Test {
     }
 
     function testNonOwnerCannotExecute() public {
-        bytes memory data = abi.encodeWithSelector(Counter.inc.selector, 1);
+        bytes memory data = abi.encodeWithSelector(TestTarget.inc.selector, 1);
         
         vm.prank(notOwner);
         vm.expectRevert("not allowed");
@@ -72,7 +82,7 @@ contract SmartAccountTest is Test {
         account.setEntryPoint(entryPoint);
         
         // Execute from entry point
-        bytes memory data = abi.encodeWithSelector(Counter.inc.selector, 3);
+        bytes memory data = abi.encodeWithSelector(TestTarget.inc.selector, 3);
         vm.prank(entryPoint);
         account.execute(address(counter), 0, data);
         
@@ -87,7 +97,7 @@ contract SmartAccountTest is Test {
 
     function testExecuteWithValue() public {
         // Deploy a contract that can receive ETH
-        address payable receiver = payable(address(new Counter()));
+        address payable receiver = payable(address(new TestTarget()));
         uint256 sendValue = 1 ether;
         
         uint256 receiverBalanceBefore = receiver.balance;
@@ -110,7 +120,7 @@ contract SmartAccountTest is Test {
         assertEq(account.owner(), newOwner);
         
         // Old owner cannot execute anymore
-        bytes memory data = abi.encodeWithSelector(Counter.inc.selector, 1);
+        bytes memory data = abi.encodeWithSelector(TestTarget.inc.selector, 1);
         vm.prank(owner);
         vm.expectRevert("not allowed");
         account.execute(address(counter), 0, data);
