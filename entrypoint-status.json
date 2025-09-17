@@ -1,0 +1,9 @@
+{
+    "timestamp": "2025-09-17T19:18:34Z",
+    "entryPoint": "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789",
+    "smartAccount": "0x70C1bf3Fd34d99c627fD3f72d600301D54A9eC77",
+    "balance_wei": "0",
+    "balance_eth": "0",
+    "minimum_wei": "1000000000000000",
+    "healthy": false
+}

@@ -1,0 +1,15 @@
+{
+    "timestamp": "2025-09-17T19:38:28Z",
+    "method": "metadata_stripped_comparison",
+    "results": {
+        "matches": 2,
+        "mismatches": 3,
+        "contracts": {
+            "SmartAccount": "0x70C1bf3Fd34d99c627fD3f72d600301D54A9eC77",
+            "SocialRecoveryModule": "0x433Ed3DAb6C5502029972C7af2F01F08b98DcD1B",
+            "SessionKeyModule": "0xC63D5dc1C052289411f848051dB03A8e57D7f094",
+            "SessionKeyValidator": "0x3473Aa5410B15b7B8a437f673dDAFcdd72004203",
+            "SpendingLimitModule": "0xb466320AB6b2A45aE0BEaAEB254ca3c74ef1E9e2"
+        }
+    }
+}
