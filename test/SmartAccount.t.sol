@@ -139,7 +139,7 @@ contract SmartAccountTest is Test {
 
     function testOnlyOwnerCanTransferOwnership() public {
         vm.prank(notOwner);
-        vm.expectRevert("not owner");
+        vm.expectRevert("not allowed");
         account.transferOwnership(address(0xBEEF));
     }
 

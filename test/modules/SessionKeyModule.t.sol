@@ -144,8 +144,8 @@ contract SessionKeyModuleTest is Test {
     
     function testGrantSessionKeyWithInvalidExpiry() public {
         vm.prank(address(account));
-        vm.expectRevert(bytes("past expiry"));
-        validator.grant(sessionKey, uint64(block.timestamp - 1));
+        vm.expectRevert(bytes("expiry too soon"));
+        validator.grant(sessionKey, uint64(block.timestamp + 30)); // Less than 60s buffer
     }
     
     function testSessionKeyExpiry() public {
@@ -171,11 +171,16 @@ contract SessionKeyModuleTest is Test {
         vm.prank(address(account));
         validator.allowSelector(sessionKey, SET_VALUE_SELECTOR, true);
         
-        // Execute should work (module allows everything for now)
+        // Test that the module would allow this selector for the session key
         bytes memory data = abi.encodeWithSelector(SET_VALUE_SELECTOR, 42);
+        
+        // Direct test of module logic (not through account execution)
+        // The module should return true for allowed selector
+        assertTrue(sessionModule.preExecute(sessionKey, address(target), 0, data));
+        
+        // Owner can always execute regardless of session key rules
         vm.prank(owner);
         account.execute(address(target), 0, data);
-        
         assertEq(target.value(), 42);
     }
     
@@ -184,13 +189,17 @@ contract SessionKeyModuleTest is Test {
         vm.prank(address(account));
         validator.grant(sessionKey, uint64(block.timestamp + 1 hours));
         
-        // Don't allow the selector
+        // Don't allow the selector (it's disallowed by default)
         
-        // Execute should still work since module is permissive
+        // Test that the module would block this selector for the session key
         bytes memory data = abi.encodeWithSelector(SET_VALUE_SELECTOR, 42);
+        
+        // Direct test of module logic - should return false for disallowed selector
+        assertFalse(sessionModule.preExecute(sessionKey, address(target), 0, data));
+        
+        // Owner can always execute regardless of session key rules
         vm.prank(owner);
         account.execute(address(target), 0, data);
-        
         assertEq(target.value(), 42);
     }
     
@@ -223,11 +232,16 @@ contract SessionKeyModuleTest is Test {
         // Fast forward past expiry
         vm.warp(block.timestamp + 101);
         
-        // Execute should still work since module allows everything
+        // Execute should be blocked because session key is expired
         bytes memory data = abi.encodeWithSelector(SET_VALUE_SELECTOR, 99);
+        
+        // When a session key is expired, the module returns false
+        assertFalse(sessionModule.preExecute(sessionKey, address(target), 0, data));
+        
+        // If the owner tries to execute with an expired session key's context, module blocks it
+        // But owner can always execute directly since they're not restricted by session key rules
         vm.prank(owner);
         account.execute(address(target), 0, data);
-        
         assertEq(target.value(), 99);
     }
 }

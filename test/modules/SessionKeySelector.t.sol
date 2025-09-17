@@ -50,13 +50,15 @@ contract SessionKeySelectorTest is Test {
         // doThing not allowed yet
         bytes memory data = abi.encodeWithSelector(tgt.doThing.selector, 7);
 
-        // Owner execution passes (owner is not a session key)
+        // Test module logic directly - should block disallowed selector for session key
+        assertFalse(mod.preExecute(sessEOA, address(tgt), 0, data));
+        
+        // Owner execution always passes (owner is not restricted by session key rules)
         vm.prank(ownerEOA);
         acc.execute(address(tgt), 0, data);
         
-        // Note: To properly test session key blocking, we'd need to go through EntryPoint
-        // with a UserOperation signed by the session key. Direct execute calls are blocked
-        // by onlyEntryPointOrOwner modifier, not by the module logic.
+        // Note: Session keys can't directly call execute due to onlyEntryPointOrOwner
+        // In real usage, session keys go through EntryPoint with UserOperations
     }
 
     function testAllowedSelectorPasses() public {
@@ -65,6 +67,9 @@ contract SessionKeySelectorTest is Test {
         val.allowSelector(sessEOA, tgt.doThing.selector, true);
 
         bytes memory data = abi.encodeWithSelector(tgt.doThing.selector, 42);
+
+        // Test module logic - should allow this selector for session key
+        assertTrue(mod.preExecute(sessEOA, address(tgt), 0, data));
 
         vm.expectEmit(true, true, true, true);
         emit DummyTarget.DidCall(tgt.doThing.selector, 42);

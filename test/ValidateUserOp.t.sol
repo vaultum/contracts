@@ -110,16 +110,16 @@ contract ValidateUserOpTest is Test {
         
         UserOperation memory userOp = _createUserOp(signature);
         
-        // Track entry point balance before
-        uint256 entryPointBalanceBefore = address(entryPoint).balance;
-        
-        // Call with missing funds
+        // Our security fix now requires zero missing funds
         uint256 missingFunds = 0.1 ether;
-        uint256 validationData = entryPoint.callValidateWithFunds{value: 0}(account, userOp, userOpHash, missingFunds);
         
-        // Should succeed and transfer funds
-        assertEq(validationData, 0, "Validation should succeed");
-        assertEq(address(entryPoint).balance, entryPointBalanceBefore + missingFunds, "Missing funds should be paid");
+        // Should revert when missing funds > 0
+        vm.expectRevert("Insufficient EntryPoint deposit");
+        entryPoint.callValidateWithFunds{value: 0}(account, userOp, userOpHash, missingFunds);
+        
+        // Should succeed with zero missing funds
+        uint256 validationData = entryPoint.callValidateWithFunds{value: 0}(account, userOp, userOpHash, 0);
+        assertEq(validationData, 0, "Validation should succeed with zero missing funds");
     }
 
     function testValidateUserOpWithEmptySignature() public {

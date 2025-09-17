@@ -1,0 +1,17 @@
+{
+  "chain": "sepolia",
+  "chainId": 11155111,
+  "deployer": "0xa1cdCE5b32474E4f353b747DDb37F39b82447548",
+  "timestamp": 1758036480,
+  "method": "cast send --create",
+  "contracts": {
+    "SmartAccount": "0x89b41260DB3F0DF14BEB2A3eE1432017FCb540C6",
+    "SocialRecoveryModule": null,
+    "SessionKeyModule": null,
+    "SessionKeyValidator": null,
+    "SpendingLimitModule": null
+  },
+  "entryPoint": "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789",
+  "notes": "Initial manual deployment using cast send --create. Modules not yet deployed.",
+  "tx": "0x2f7090f8d97168b32e129f0d1ac0bc0ba2c06d3fb0b339ce16c658646ddc0816"
+}

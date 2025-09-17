@@ -109,14 +109,17 @@ contract SessionKeyValidatorTest is Test {
         bytes memory signature = _signUserOpHash(opHash, ownerPrivateKey);
         UserOperation memory op = _createUserOp(signature);
         
+        // Our security fix now requires zero missing funds
+        // The account should maintain sufficient deposit in EntryPoint
         uint256 missingFunds = 0.1 ether;
-        uint256 beforeBalance = address(entryPoint).balance;
         
-        uint256 result = entryPoint.callValidateWithFunds{value: 0}(account, op, opHash, missingFunds);
+        // Expect revert when missing funds > 0
+        vm.expectRevert("Insufficient EntryPoint deposit");
+        entryPoint.callValidateWithFunds{value: 0}(account, op, opHash, missingFunds);
         
-        assertEq(result, 0, "Validation should pass");
-        assertEq(address(entryPoint).balance, beforeBalance + missingFunds, "EntryPoint should receive missing funds");
-        assertEq(entryPoint.fundsReceived(), missingFunds, "Funds received should be tracked");
+        // Test with zero missing funds - should pass
+        uint256 result = entryPoint.callValidateWithFunds{value: 0}(account, op, opHash, 0);
+        assertEq(result, 0, "Validation should pass with zero missing funds");
     }
     
     function testMultipleValidators() public {
@@ -180,7 +183,7 @@ contract SessionKeyValidatorTest is Test {
     
     function testCannotGrantPastExpiry() public {
         vm.prank(address(account));
-        vm.expectRevert("past expiry");
-        validator.grant(sessionKey, uint64(block.timestamp - 1));
+        vm.expectRevert("expiry too soon");
+        validator.grant(sessionKey, uint64(block.timestamp + 30)); // Less than 60s buffer
     }
 }

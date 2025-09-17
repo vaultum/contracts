@@ -29,7 +29,8 @@ contract SessionKeyValidator is ISignatureValidator {
 
     function grant(address key, uint64 expiry) external onlyAccount {
         require(key != address(0), "zero key");
-        require(expiry > block.timestamp, "past expiry"); // exact text expected by tests
+        // Audit L-2 FIX: Add 60s buffer to prevent miner timestamp manipulation
+        require(expiry > block.timestamp + 60, "expiry too soon");
         
         sessionExpiry[key] = expiry;
         emit SessionGranted(key, expiry);

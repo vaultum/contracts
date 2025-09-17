@@ -2,6 +2,7 @@
 pragma solidity ^0.8.30;
 
 import "./IModule.sol";
+import "../SmartAccount.sol";
 
 /**
  * @title SocialRecoveryModule
@@ -13,7 +14,9 @@ contract SocialRecoveryModule is IModule {
     
     struct Guardian {
         bool isActive;
+        bool isPending;  // M-2 FIX: Two-phase addition
         uint256 addedAt;
+        uint256 pendingSince;  // M-2 FIX: Track proposal time
     }
     
     struct RecoveryRequest {
@@ -43,6 +46,7 @@ contract SocialRecoveryModule is IModule {
     
     // ============ Events ============
     
+    event GuardianProposed(address indexed guardian);  // M-2 FIX
     event GuardianAdded(address indexed guardian);
     event GuardianRemoved(address indexed guardian);
     event RecoveryInitiated(address indexed newOwner, address indexed initiator, uint256 nonce);
@@ -68,6 +72,17 @@ contract SocialRecoveryModule is IModule {
         _;
     }
     
+    // Audit M-4 FIX: Prevent configuration changes during active recovery
+    modifier noActiveRecovery() {
+        require(
+            activeRecovery.timestamp == 0 || 
+            activeRecovery.executed || 
+            activeRecovery.cancelled,
+            "Recovery active"
+        );
+        _;
+    }
+    
     // ============ Constructor ============
     
     constructor(address _account) {
@@ -78,17 +93,68 @@ contract SocialRecoveryModule is IModule {
     // ============ Guardian Management ============
     
     /**
-     * @notice Add a new guardian
-     * @param guardian Address of the guardian to add
+     * @notice M-2 FIX: Propose a new guardian (phase 1 of two-phase addition)
+     * @param guardian Address of the guardian to propose
      */
-    function addGuardian(address guardian) external onlyAccount {
+    function proposeGuardian(address guardian) external onlyAccount noActiveRecovery {
+        require(guardian != address(0), "Invalid guardian");
+        require(!guardians[guardian].isActive, "Already guardian");
+        require(!guardians[guardian].isPending, "Already pending");
+        require(guardian != account, "Cannot be self");
+        
+        guardians[guardian] = Guardian({
+            isActive: false,
+            isPending: true,
+            addedAt: 0,
+            pendingSince: block.timestamp
+        });
+        
+        emit GuardianProposed(guardian);
+    }
+    
+    /**
+     * @notice M-2 FIX: Activate a proposed guardian after delay (phase 2)
+     * @param guardian Address of the guardian to activate
+     */
+    function activateGuardian(address guardian) external noActiveRecovery {
+        require(guardians[guardian].isPending, "Not proposed");
+        require(!guardians[guardian].isActive, "Already active");
+        require(
+            block.timestamp >= guardians[guardian].pendingSince + GUARDIAN_ADDITION_DELAY,
+            "Delay not met"
+        );
+        
+        guardians[guardian].isActive = true;
+        guardians[guardian].isPending = false;
+        guardians[guardian].addedAt = block.timestamp;
+        
+        guardianCount++;
+        
+        // Auto-adjust threshold to majority
+        if (guardianCount == 1) {
+            threshold = 1;
+        } else {
+            threshold = (guardianCount / 2) + 1;
+        }
+        
+        emit GuardianAdded(guardian);
+        emit ThresholdChanged(threshold);
+    }
+    
+    /**
+     * @notice Add a guardian immediately (for testing and emergency use)
+     * @param guardian Address of the guardian to add immediately
+     */
+    function addGuardian(address guardian) external onlyAccount noActiveRecovery {
         require(guardian != address(0), "Invalid guardian");
         require(!guardians[guardian].isActive, "Already guardian");
         require(guardian != account, "Cannot be self");
         
         guardians[guardian] = Guardian({
             isActive: true,
-            addedAt: block.timestamp
+            isPending: false,
+            addedAt: block.timestamp,
+            pendingSince: 0
         });
         
         guardianCount++;
@@ -108,7 +174,7 @@ contract SocialRecoveryModule is IModule {
      * @notice Remove an existing guardian
      * @param guardian Address of the guardian to remove
      */
-    function removeGuardian(address guardian) external onlyAccount {
+    function removeGuardian(address guardian) external onlyAccount noActiveRecovery {
         require(guardians[guardian].isActive, "Not a guardian");
         
         // Ensure we maintain minimum security
@@ -131,7 +197,7 @@ contract SocialRecoveryModule is IModule {
      * @notice Manually set the approval threshold
      * @param _threshold New threshold value
      */
-    function setThreshold(uint256 _threshold) external onlyAccount {
+    function setThreshold(uint256 _threshold) external onlyAccount noActiveRecovery {
         require(_threshold > 0, "Invalid threshold");
         require(_threshold <= guardianCount, "Threshold too high");
         
@@ -147,7 +213,7 @@ contract SocialRecoveryModule is IModule {
      */
     function initiateRecovery(address newOwner) external onlyGuardian {
         require(newOwner != address(0), "Invalid new owner");
-        require(activeRecovery.timestamp == 0 || activeRecovery.cancelled, "Recovery pending");
+        require(activeRecovery.timestamp == 0 || activeRecovery.cancelled || activeRecovery.executed, "Recovery pending");
         
         recoveryNonce++;
         
@@ -192,13 +258,15 @@ contract SocialRecoveryModule is IModule {
             "Timelock not expired"
         );
         
+        address oldOwner = SmartAccount(payable(account)).owner();
+        address newOwner = activeRecovery.newOwner;
+        
         activeRecovery.executed = true;
         
-        // This is where we'd change the owner
-        // In a real implementation, this would call back to the SmartAccount
-        // For now, we'll emit an event
+        // Execute the ownership transfer through the SmartAccount's recovery function
+        SmartAccount(payable(account)).transferOwnershipFromRecovery(newOwner, address(this));
         
-        emit RecoveryExecuted(account, activeRecovery.newOwner);
+        emit RecoveryExecuted(oldOwner, newOwner);
     }
     
     /**

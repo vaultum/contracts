@@ -59,10 +59,10 @@ contract SessionKeyValidatorTest is Test {
     }
 
     function testGrantSessionKeyFailsWithPastExpiry() public {
-        uint64 expiry = uint64(block.timestamp - 1);
+        uint64 expiry = uint64(block.timestamp + 30); // Less than 60s buffer
         
         vm.prank(address(account));
-        vm.expectRevert(bytes("past expiry"));
+        vm.expectRevert(bytes("expiry too soon"));
         validator.grant(sessionKey, expiry);
     }
 

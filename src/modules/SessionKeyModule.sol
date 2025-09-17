@@ -14,9 +14,21 @@ contract SessionKeyModule is IModule {
         validator = SessionKeyValidator(_validator);
     }
 
-    function preExecute(address caller, address, uint256, bytes calldata data) external override returns (bool) {
+    function preExecute(address caller, address target, uint256, bytes calldata data) external override returns (bool) {
+        // First check if this is a session key (has expiry)
         uint64 exp = validator.sessionExpiry(caller);
-        if (exp == 0 || exp <= block.timestamp) return true;
+        
+        // If not a session key (exp == 0), allow everything (owner/entrypoint can execute anything)
+        if (exp == 0) return true;
+        
+        // For session keys, check expiry
+        if (exp <= block.timestamp) return false;
+        
+        // H-1 FIX: Prevent session keys from calling the account itself
+        // This prevents bypass of selector restrictions via recursive calls
+        if (target == account) return false;
+        
+        // Check selector allowlist for session keys
         if (data.length < 4) return false;
         bytes4 sel;
         assembly {

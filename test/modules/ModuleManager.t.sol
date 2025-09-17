@@ -155,13 +155,13 @@ contract ModuleManagerTest is Test {
     
     function testCannotAddZeroAddressModule() public {
         vm.prank(owner);
-        vm.expectRevert(InvalidModule.selector);
+        vm.expectRevert("Invalid module");
         account.addModule(address(0));
     }
     
     function testOnlyOwnerCanAddModule() public {
         vm.prank(notOwner);
-        vm.expectRevert("not owner");
+        vm.expectRevert("not allowed");
         account.addModule(address(module1));
     }
     
@@ -217,7 +217,7 @@ contract ModuleManagerTest is Test {
         account.addModule(address(module1));
         
         vm.prank(notOwner);
-        vm.expectRevert("not owner");
+        vm.expectRevert("not allowed");
         account.removeModule(address(module1));
     }
     

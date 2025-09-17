@@ -274,6 +274,10 @@ contract SocialRecoveryModuleTest is Test {
         recoveryModule.addGuardian(guardian3);
         vm.stopPrank();
         
+        // Authorize the recovery module to change ownership (must be done by owner)
+        vm.prank(owner);
+        account.setRecoveryModule(address(recoveryModule), true);
+        
         // Guardian 1 initiates
         vm.prank(guardian1);
         recoveryModule.initiateRecovery(newOwner);
@@ -291,7 +295,7 @@ contract SocialRecoveryModuleTest is Test {
         
         // Now execution should work
         vm.expectEmit(true, true, false, false);
-        emit RecoveryExecuted(address(account), newOwner);
+        emit RecoveryExecuted(owner, newOwner);
         
         recoveryModule.executeRecovery();
         
@@ -324,6 +328,10 @@ contract SocialRecoveryModuleTest is Test {
         // Setup
         vm.prank(address(account));
         recoveryModule.addGuardian(guardian1);
+        
+        // Authorize the recovery module (must be done by owner)
+        vm.prank(owner);
+        account.setRecoveryModule(address(recoveryModule), true);
         
         // Initiate and execute
         vm.prank(guardian1);
@@ -425,6 +433,10 @@ contract SocialRecoveryModuleTest is Test {
         vm.prank(address(account));
         recoveryModule.addGuardian(guardian1);
         
+        // Authorize the recovery module (must be done by owner)
+        vm.prank(owner);
+        account.setRecoveryModule(address(recoveryModule), true);
+        
         // Threshold should be 1
         assertEq(recoveryModule.threshold(), 1);
         
@@ -516,6 +528,10 @@ contract SocialRecoveryModuleTest is Test {
         // Setup
         vm.prank(address(account));
         recoveryModule.addGuardian(guardian1);
+        
+        // Authorize the recovery module (must be done by owner)
+        vm.prank(owner);
+        account.setRecoveryModule(address(recoveryModule), true);
         
         // Initiate
         vm.prank(guardian1);

@@ -86,7 +86,7 @@ contract SpendingLimitModuleTest is Test {
         spendingModule.setLimit(address(token), SPENDING_CAP);
         
         // Check limit is set
-        (uint256 cap, uint256 windowStart, uint256 spentInWindow) = spendingModule.limits(address(token));
+        (uint256 cap, uint256 windowStart, uint256 spentInWindow, , ) = spendingModule.limits(address(token));
         assertEq(cap, SPENDING_CAP);
         assertEq(windowStart, block.timestamp);
         assertEq(spentInWindow, 0);
@@ -96,7 +96,7 @@ contract SpendingLimitModuleTest is Test {
         // New module allows setting limit for address(0), which won't affect anything
         vm.prank(address(account));
         spendingModule.setLimit(address(0), SPENDING_CAP);
-        (uint256 cap,,) = spendingModule.limits(address(0));
+        (uint256 cap, , , , ) = spendingModule.limits(address(0));
         assertEq(cap, SPENDING_CAP);
     }
     
@@ -104,7 +104,7 @@ contract SpendingLimitModuleTest is Test {
         // Zero cap means no limit (always passes)
         vm.prank(address(account));
         spendingModule.setLimit(address(token), 0);
-        (uint256 cap,,) = spendingModule.limits(address(token));
+        (uint256 cap, , , , ) = spendingModule.limits(address(token));
         assertEq(cap, 0);
     }
     
@@ -133,7 +133,7 @@ contract SpendingLimitModuleTest is Test {
         assertEq(token.balanceOf(recipient), transferAmount);
         
         // Check spending status
-        (uint256 cap, uint64 windowStart, uint256 spent) = spendingModule.limits(address(token));
+        (uint256 cap, uint64 windowStart, uint256 spent, , ) = spendingModule.limits(address(token));
         uint256 remaining = cap > spent ? cap - spent : 0;
         assertEq(cap, SPENDING_CAP);
         assertEq(spent, transferAmount);
@@ -178,7 +178,7 @@ contract SpendingLimitModuleTest is Test {
         assertEq(token.balanceOf(recipient), firstAmount + secondAmount);
         
         // Check spending status
-        (uint256 cap, uint64 windowStart, uint256 spent) = spendingModule.limits(address(token));
+        (uint256 cap, uint64 windowStart, uint256 spent, , ) = spendingModule.limits(address(token));
         uint256 remaining = cap > spent ? cap - spent : 0;
         assertEq(cap, SPENDING_CAP);
         assertEq(spent, firstAmount + secondAmount);
@@ -236,7 +236,7 @@ contract SpendingLimitModuleTest is Test {
         assertEq(token.balanceOf(recipient), firstAmount + secondAmount);
         
         // Check spending status (should be reset)
-        (uint256 cap, uint64 windowStart, uint256 spent) = spendingModule.limits(address(token));
+        (uint256 cap, uint64 windowStart, uint256 spent, , ) = spendingModule.limits(address(token));
         uint256 remaining = cap > spent ? cap - spent : 0;
         assertEq(cap, SPENDING_CAP);
         assertEq(spent, secondAmount);

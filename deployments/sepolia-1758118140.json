@@ -1,0 +1,14 @@
+{
+  "chain": "sepolia",
+  "chainId": 11155111,
+  "deployer": "0xa1cdCE5b32474E4f353b747DDb37F39b82447548",
+  "timestamp": 1758118140,
+  "contracts": {
+    "SmartAccount": "0xDD596d659cc8af5103D7ac93A6d837B120699aA9",
+    "SocialRecoveryModule": "0xf9F583DD668926ECc2c5F3bA13dD8374DDF17c8a",
+    "SessionKeyModule": "0x321c94e4b5C164b5B34b7A07F534474aaC274cA5",
+    "SessionKeyValidator": "0x23bD729fa2EF1196f0ee267ed6569B20107b0b09",
+    "SpendingLimitModule": "0xBa821D89a5916596C74f2D3a233D5B530a2Ce0e8"
+  },
+  "entryPoint": "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
+}
