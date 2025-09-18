@@ -34,6 +34,8 @@ contract SpendingLimitModule is IModule {
     event LimitExceeded(address indexed token, uint256 attempted, uint256 cap);
     event LimitBypassed(address indexed owner, address indexed token, uint256 amount);
     event BypassToggled(bool enabled);
+    event EthSpent(address indexed spender, uint256 amount);
+    event EthLimitExceeded(uint256 attempted, uint256 cap);
 
     modifier onlyAccount() { require(msg.sender == account, "not account"); _; }
 
@@ -69,6 +71,31 @@ contract SpendingLimitModule is IModule {
             limits[token].windowStart = uint64(block.timestamp);
         }
         emit LimitSet(token, cap);
+    }
+    
+    /**
+     * @notice Convenience function to set ETH spending limit
+     * @param cap Daily spending cap in wei
+     * @dev This is equivalent to setLimit(address(0), cap)
+     */
+    function setEthLimit(uint256 cap) external onlyAccount {
+        limits[address(0)].cap = cap;
+        limits[address(0)].decimals = 18; // ETH has 18 decimals
+        limits[address(0)].isNormalized = true;
+        // initialize window on first set if not set
+        if (limits[address(0)].windowStart == 0) {
+            limits[address(0)].windowStart = uint64(block.timestamp);
+        }
+        emit LimitSet(address(0), cap);
+    }
+    
+    /**
+     * @notice Remove ETH spending limit
+     * @dev Sets the ETH limit to 0, effectively removing the restriction
+     */
+    function removeEthLimit() external onlyAccount {
+        delete limits[address(0)];
+        emit LimitSet(address(0), 0);
     }
 
     function _rolloverIfNeeded(Limit storage L) internal {
@@ -110,10 +137,14 @@ contract SpendingLimitModule is IModule {
         return ownerBypassEnabled && block.timestamp <= bypassEnabledUntil;
     }
 
-    function preExecute(address caller, address target, uint256, bytes calldata data) external override returns (bool) {
+    function preExecute(address caller, address target, uint256 value, bytes calldata data) external override returns (bool) {
         // Check if owner bypass is active
         if (isBypassActive() && caller == SmartAccount(payable(account)).owner()) {
-            // Extract amount for logging
+            // Log ETH bypass if sending ETH
+            if (value > 0) {
+                emit LimitBypassed(caller, address(0), value);
+            }
+            // Extract amount for logging (ERC-20)
             if (data.length >= 68) {
                 bytes4 selector;
                 assembly {
@@ -134,6 +165,24 @@ contract SpendingLimitModule is IModule {
                 }
             }
             return true; // Owner bypass active, skip limits
+        }
+        
+        // NEW: Handle native ETH spending limits
+        if (value > 0) {
+            Limit storage ethLimit = limits[address(0)]; // Use address(0) for ETH
+            if (ethLimit.cap > 0) { // If ETH limit is set
+                _rolloverIfNeeded(ethLimit);
+                unchecked {
+                    uint256 newSpent = ethLimit.spentInWindow + value;
+                    if (newSpent > ethLimit.cap) {
+                        emit EthLimitExceeded(newSpent, ethLimit.cap);
+                        revert SpendingLimitExceeded();
+                    }
+                    ethLimit.spentInWindow = newSpent;
+                }
+                emit EthSpent(caller, value);
+                emit Spent(address(0), ethLimit.spentInWindow);
+            }
         }
         
         if (data.length < 4) return true;
@@ -184,5 +233,55 @@ contract SpendingLimitModule is IModule {
 
     function postExecute(address, address, uint256, bytes calldata, bytes calldata) external override returns (bool) {
         return true;
+    }
+    
+    // ============ View Functions ============
+    
+    /**
+     * @notice Get ETH spending limit details
+     * @return cap The daily spending cap for ETH
+     * @return spent Amount spent in current window
+     * @return remaining Amount remaining in current window
+     * @return resetsAt Timestamp when window resets
+     */
+    function getEthLimit() external view returns (
+        uint256 cap,
+        uint256 spent,
+        uint256 remaining,
+        uint256 resetsAt
+    ) {
+        Limit storage ethLimit = limits[address(0)];
+        cap = ethLimit.cap;
+        spent = ethLimit.spentInWindow;
+        
+        // Calculate remaining
+        if (cap > spent) {
+            remaining = cap - spent;
+        } else {
+            remaining = 0;
+        }
+        
+        // Calculate reset time
+        if (ethLimit.windowStart > 0) {
+            resetsAt = ethLimit.windowStart + 1 days;
+        }
+    }
+    
+    /**
+     * @notice Check if an ETH transfer would exceed the limit
+     * @param amount Amount of ETH to check
+     * @return wouldExceed True if transfer would exceed limit
+     */
+    function wouldExceedEthLimit(uint256 amount) external view returns (bool wouldExceed) {
+        Limit storage ethLimit = limits[address(0)];
+        if (ethLimit.cap == 0) return false; // No limit set
+        
+        // Check if window needs rollover
+        uint256 currentSpent = ethLimit.spentInWindow;
+        if (block.timestamp >= ethLimit.windowStart + 1 days) {
+            currentSpent = 0; // Would reset
+        }
+        
+        return (currentSpent + amount) > ethLimit.cap;
     }
 }
