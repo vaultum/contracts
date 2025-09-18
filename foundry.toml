@@ -9,7 +9,7 @@ optimizer = true
 optimizer_runs = 200
 evm_version = "paris"
 bytecode_hash = "none"  # Prevents metadata hash variability
-via_ir = false
+via_ir = true  # Required for stack depth
 
 gas_reports = ["SmartAccount", "SpendingLimitModule", "SessionKeyValidator", "SocialRecoveryModule"]
 fs_permissions = [{ access = "read-write", path = "./deployments" }]
