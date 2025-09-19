@@ -6,10 +6,10 @@ import {SmartAccount} from "../../src/SmartAccount.sol";
 import {SessionKeyValidator} from "../../src/validators/SessionKeyValidator.sol";
 
 /**
- * @title AUDITOR REQUIRED: TOCTOU Protection Tests
- * @notice Proves session key binding prevents Time-of-Check, Time-of-Use attacks
+ * @title AUDITOR REQUIRED: Session Key Binding Tests
+ * @notice Verifies session key validation and execution consistency
  */
-contract TOCTOU_ProtectionTest is Test {
+contract SessionKeyBindingTest is Test {
     SmartAccount public account;
     SessionKeyValidator public validator;
     
@@ -34,7 +34,7 @@ contract TOCTOU_ProtectionTest is Test {
         validator.allowSelector(sessionKey, bytes4(keccak256("executeWithSessionKey(address,address,uint256,bytes,uint256)")), true);
     }
 
-    function test_TOCTOU_SessionKeyBinding() public {
+    function test_SessionKeyBinding_Enforcement() public {
         // Set spending cap
         vm.prank(address(account));
         validator.setSpendingCap(sessionKey, 1 ether);
@@ -53,7 +53,7 @@ contract TOCTOU_ProtectionTest is Test {
         assertEq(target.balance, 0.5 ether);
     }
 
-    function test_TOCTOU_AtomicConsumption() public {
+    function test_AtomicConsumption_Enforcement() public {
         // Set cap near limit
         vm.prank(address(account));
         validator.setSpendingCap(sessionKey, 1 ether);
@@ -77,7 +77,7 @@ contract TOCTOU_ProtectionTest is Test {
         assertEq(spent, 0.9 ether);
     }
 
-    function test_TOCTOU_WindowDeterminism() public {
+    function test_WindowCalculation_Determinism() public {
         uint48 windowStart = uint48(block.timestamp);
         uint48 sameDay = windowStart + 3600; // 1 hour later
         uint48 nextDay = windowStart + 1 days;
@@ -100,7 +100,7 @@ contract TOCTOU_ProtectionTest is Test {
         assertEq(validator.getWindowId(nextDay), validator.getWindowId(nextDay));
     }
 
-    function test_TOCTOU_ConcurrentProtection() public {
+    function test_ConcurrentSpending_Protection() public {
         // Set 1 ETH cap
         vm.prank(address(account));
         validator.setSpendingCap(sessionKey, 1 ether);
@@ -115,9 +115,7 @@ contract TOCTOU_ProtectionTest is Test {
         (, uint256 spent,) = validator.getSpendingStatus(sessionKey, currentTime);
         assertEq(spent, 0.8 ether);
         
-        // Second operation tries to consume 0.8 ETH - should fail
-        // This simulates the race condition: both would pass validation
-        // but only one can succeed in atomic consumption
+        // Second operation exceeds remaining cap - should fail atomically
         vm.expectRevert("Daily cap exceeded");
         vm.prank(address(account));
         validator.consumeOrRevert(sessionKey, 0.8 ether, currentTime); // 0.8 + 0.8 > 1.0
@@ -127,7 +125,7 @@ contract TOCTOU_ProtectionTest is Test {
         assertEq(spent, 0.8 ether); // Still 0.8, second consumption failed
     }
 
-    function test_TOCTOU_TargetAllowlistBinding() public {
+    function test_TargetAllowlist_Enforcement() public {
         address allowedTarget = makeAddr("allowedTarget");
         address blockedTarget = makeAddr("blockedTarget");
         

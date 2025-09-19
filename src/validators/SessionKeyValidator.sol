@@ -68,11 +68,12 @@ contract SessionKeyValidator is ISignatureValidator {
     }
 
     function isValidUserOp(bytes calldata userOpSignature, bytes32 userOpHash) external view override returns (bool) {
-        // Accept only if signer is an active session key
+        // Deterministic validation: signature must recover to a registered session key
         (address rec, ECDSA.RecoverError err,) = userOpHash.toEthSignedMessageHash().tryRecover(userOpSignature);
         if (err != ECDSA.RecoverError.NoError) return false;
         uint64 exp = sessionExpiry[rec];
-        return exp != 0 && exp > block.timestamp;
+        // Do NOT read block.timestamp here; time-bounds will be packed by the account
+        return exp != 0;
     }
     
     // ============ V2: AUDITOR APPROVED SESSION KEY CAPS ============

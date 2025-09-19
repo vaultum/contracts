@@ -14,7 +14,7 @@ contract SocialRecoveryModuleTest is Test {
     address public guardian2 = address(0x3);
     address public guardian3 = address(0x4);
     address public newOwner = address(0x5);
-    address public attacker = address(0x666);
+    address public unauthorizedUser = address(0x666);
     
     event GuardianAdded(address indexed guardian);
     event GuardianRemoved(address indexed guardian);
@@ -376,8 +376,8 @@ contract SocialRecoveryModuleTest is Test {
         vm.prank(guardian1);
         recoveryModule.initiateRecovery(newOwner);
         
-        // Attacker tries to cancel
-        vm.prank(attacker);
+        // Unauthorized user tries to cancel
+        vm.prank(unauthorizedUser);
         vm.expectRevert("Only account");
         recoveryModule.cancelRecovery();
     }

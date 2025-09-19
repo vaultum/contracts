@@ -14,6 +14,10 @@ import {ISignatureValidator} from "./validators/ISignatureValidator.sol";
 import {SessionKeyValidator} from "./validators/SessionKeyValidator.sol";
 import {SpendingLimitModule, SpendingLimitExceeded} from "./modules/SpendingLimitModule.sol";
 
+interface ISessionKeyExpiry {
+    function sessionExpiry(address key) external view returns (uint64);
+}
+
 contract SmartAccount is IAccount, IERC1271, ModuleManagerOptimized, ValidatorManager, ReentrancyGuard {
     using ECDSA for bytes32;
     using MessageHashUtils for bytes32;
@@ -338,58 +342,59 @@ contract SmartAccount is IAccount, IERC1271, ModuleManagerOptimized, ValidatorMa
 
         // 2) try registered validators if not owner
         if (!sigValid) {
-            // Try to recover the signer for session key validation
-            address sessionKeySigner = address(0);
-            if (err == ECDSA.RecoverError.NoError) {
-                sessionKeySigner = recovered;
-            }
-            
             address[] memory list = getValidators();
             for (uint256 i = 0; i < list.length; i++) {
                 if (ISignatureValidator(list[i]).isValidUserOp(userOp.signature, userOpHash)) {
-                    // CRITICAL FIX: For session keys, verify selector allowlist
-                    // Check if this is the SessionKeyValidator by checking if it has sessionExpiry mapping
-                    try SessionKeyValidator(list[i]).sessionExpiry(sessionKeySigner) returns (uint64 expiry) {
-                        if (expiry > 0 && userOp.callData.length >= 4) {
-                            // Extract selector from callData
-                            bytes4 selector = bytes4(userOp.callData);
-                            // Check if selector is allowed for this session key
-                            if (!SessionKeyValidator(list[i]).selectorAllowed(sessionKeySigner, selector)) {
-                                continue; // Try next validator
+                    // Signature accepted by external validator; derive signer and fetch expiry deterministically
+                    (address rec, ECDSA.RecoverError recoveryErr,) = userOpHash.toEthSignedMessageHash().tryRecover(userOp.signature);
+                    if (recoveryErr == ECDSA.RecoverError.NoError) {
+                        // Best-effort: if validator exposes expiry, pack it; otherwise leave 0
+                        try ISessionKeyExpiry(list[i]).sessionExpiry(rec) returns (uint64 exp) {
+                            validUntil = uint48(exp);
+                        } catch {}
+                        
+                        // CRITICAL FIX: For session keys, verify selector allowlist
+                        try SessionKeyValidator(list[i]).sessionExpiry(rec) returns (uint64 expiry) {
+                            if (expiry > 0 && userOp.callData.length >= 4) {
+                                // Extract selector from callData
+                                bytes4 selector = bytes4(userOp.callData);
+                                // Check if selector is allowed for this session key
+                                if (!SessionKeyValidator(list[i]).selectorAllowed(rec, selector)) {
+                                    continue; // Try next validator
+                                }
+                                
+                                // V2: AUDITOR REQUIRED - Bind session key and windowId to prevent TOCTOU
+                                if (selector == bytes4(keccak256("executeWithSessionKey(address,address,uint256,bytes,uint256)"))) {
+                                    // Decode session key and windowId from callData
+                                    (address sessionKey, address target, uint256 value, bytes memory data, uint256 windowId) = abi.decode(
+                                        userOp.callData[4:], 
+                                        (address, address, uint256, bytes, uint256)
+                                    );
+                                    
+                                    // AUDITOR REQUIREMENT: Validate signer == sessionKey
+                                    if (rec != sessionKey) {
+                                        continue; // Signer mismatch - security violation
+                                    }
+                                    
+                                    // AUDITOR REQUIREMENT: Deterministic windowId from signed callData
+                                    // windowId is now part of signed callData, making it deterministic
+                                    uint48 windowTime = uint48(windowId * 1 days);
+                                    
+                                    // Check spending cap (view only - no state changes)
+                                    if (SessionKeyValidator(list[i]).wouldExceedCap(sessionKey, value, windowTime)) {
+                                        continue; // Would exceed cap
+                                    }
+                                    
+                                    // Check target allowlist (view only - no state changes)  
+                                    if (!SessionKeyValidator(list[i]).isTargetAllowed(sessionKey, target)) {
+                                        continue; // Target not allowed
+                                    }
+                                }
                             }
-                            
-                            // V2: AUDITOR REQUIRED - Bind session key and windowId to prevent TOCTOU
-                            if (selector == bytes4(keccak256("executeWithSessionKey(address,address,uint256,bytes,uint256)"))) {
-                                // Decode session key and windowId from callData
-                                (address sessionKey, address target, uint256 value, bytes memory data, uint256 windowId) = abi.decode(
-                                    userOp.callData[4:], 
-                                    (address, address, uint256, bytes, uint256)
-                                );
-                                
-                                // AUDITOR REQUIREMENT: Validate signer == sessionKey
-                                if (sessionKeySigner != sessionKey) {
-                                    continue; // Signer mismatch - security violation
-                                }
-                                
-                                // AUDITOR REQUIREMENT: Deterministic windowId from signed callData
-                                // windowId is now part of signed callData, making it deterministic
-                                uint48 windowTime = uint48(windowId * 1 days);
-                                
-                                // Check spending cap (view only - no state changes)
-                                if (SessionKeyValidator(list[i]).wouldExceedCap(sessionKey, value, windowTime)) {
-                                    continue; // Would exceed cap
-                                }
-                                
-                                // Check target allowlist (view only - no state changes)  
-                                if (!SessionKeyValidator(list[i]).isTargetAllowed(sessionKey, target)) {
-                                    continue; // Target not allowed
-                                }
-                            }
+                        } catch {
+                            // Not a SessionKeyValidator, proceed normally
                         }
-                    } catch {
-                        // Not a SessionKeyValidator, proceed normally
                     }
-                    
                     sigValid = true;
                     break;
                 }
