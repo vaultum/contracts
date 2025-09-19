@@ -1,0 +1,154 @@
+'forge clean' running (wd: /Users/latifkasuli/web3/vaultum/vaultum-contracts)
+'forge config --json' running
+'forge build --build-info --skip */test/** */script/** --force' running (wd: /Users/latifkasuli/web3/vaultum/vaultum-contracts)
+INFO:Detectors:
+Math.mulDiv(uint256,uint256,uint256) (lib/openzeppelin-contracts/contracts/utils/math/Math.sol#123-202) has bitwise-xor operator ^ instead of the exponentiation operator **: 
+	 - inverse = (3 * denominator) ^ 2 (lib/openzeppelin-contracts/contracts/utils/math/Math.sol#184)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-exponentiation
+INFO:Detectors:
+Math.mulDiv(uint256,uint256,uint256) (lib/openzeppelin-contracts/contracts/utils/math/Math.sol#123-202) performs a multiplication on the result of a division:
+	- denominator = denominator / twos (lib/openzeppelin-contracts/contracts/utils/math/Math.sol#169)
+	- inverse = (3 * denominator) ^ 2 (lib/openzeppelin-contracts/contracts/utils/math/Math.sol#184)
+Math.mulDiv(uint256,uint256,uint256) (lib/openzeppelin-contracts/contracts/utils/math/Math.sol#123-202) performs a multiplication on the result of a division:
+	- denominator = denominator / twos (lib/openzeppelin-contracts/contracts/utils/math/Math.sol#169)
+	- inverse *= 2 - denominator * inverse (lib/openzeppelin-contracts/contracts/utils/math/Math.sol#188)
+Math.mulDiv(uint256,uint256,uint256) (lib/openzeppelin-contracts/contracts/utils/math/Math.sol#123-202) performs a multiplication on the result of a division:
+	- denominator = denominator / twos (lib/openzeppelin-contracts/contracts/utils/math/Math.sol#169)
+	- inverse *= 2 - denominator * inverse (lib/openzeppelin-contracts/contracts/utils/math/Math.sol#189)
+Math.mulDiv(uint256,uint256,uint256) (lib/openzeppelin-contracts/contracts/utils/math/Math.sol#123-202) performs a multiplication on the result of a division:
+	- denominator = denominator / twos (lib/openzeppelin-contracts/contracts/utils/math/Math.sol#169)
+	- inverse *= 2 - denominator * inverse (lib/openzeppelin-contracts/contracts/utils/math/Math.sol#190)
+Math.mulDiv(uint256,uint256,uint256) (lib/openzeppelin-contracts/contracts/utils/math/Math.sol#123-202) performs a multiplication on the result of a division:
+	- denominator = denominator / twos (lib/openzeppelin-contracts/contracts/utils/math/Math.sol#169)
+	- inverse *= 2 - denominator * inverse (lib/openzeppelin-contracts/contracts/utils/math/Math.sol#191)
+Math.mulDiv(uint256,uint256,uint256) (lib/openzeppelin-contracts/contracts/utils/math/Math.sol#123-202) performs a multiplication on the result of a division:
+	- denominator = denominator / twos (lib/openzeppelin-contracts/contracts/utils/math/Math.sol#169)
+	- inverse *= 2 - denominator * inverse (lib/openzeppelin-contracts/contracts/utils/math/Math.sol#192)
+Math.mulDiv(uint256,uint256,uint256) (lib/openzeppelin-contracts/contracts/utils/math/Math.sol#123-202) performs a multiplication on the result of a division:
+	- denominator = denominator / twos (lib/openzeppelin-contracts/contracts/utils/math/Math.sol#169)
+	- inverse *= 2 - denominator * inverse (lib/openzeppelin-contracts/contracts/utils/math/Math.sol#193)
+Math.mulDiv(uint256,uint256,uint256) (lib/openzeppelin-contracts/contracts/utils/math/Math.sol#123-202) performs a multiplication on the result of a division:
+	- prod0 = prod0 / twos (lib/openzeppelin-contracts/contracts/utils/math/Math.sol#172)
+	- result = prod0 * inverse (lib/openzeppelin-contracts/contracts/utils/math/Math.sol#199)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+INFO:Detectors:
+SocialRecoveryModule.noActiveRecovery() (src/modules/SocialRecoveryModule.sol#76-84) uses a dangerous strict equality:
+	- require(bool,string)(activeRecovery.timestamp == 0 || activeRecovery.executed || activeRecovery.cancelled,Recovery active) (src/modules/SocialRecoveryModule.sol#77-82)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+INFO:Detectors:
+SmartAccount.validateUserOp(UserOperation,bytes32,uint256) (src/SmartAccount.sol#326-418) ignores return value by (recovered,err,None) = userOpHash.toEthSignedMessageHash().tryRecover(userOp.signature) (src/SmartAccount.sol#337)
+SmartAccount.validateUserOp(UserOperation,bytes32,uint256) (src/SmartAccount.sol#326-418) ignores return value by (rec,recoveryErr,None) = userOpHash.toEthSignedMessageHash().tryRecover(userOp.signature) (src/SmartAccount.sol#349)
+SmartAccount.isValidSignature(bytes32,bytes) (src/SmartAccount.sol#426-451) ignores return value by (recovered,err,None) = hash.toEthSignedMessageHash().tryRecover(signature) (src/SmartAccount.sol#434)
+SessionKeyValidator.isValidUserOp(bytes,bytes32) (src/validators/SessionKeyValidator.sol#70-77) ignores return value by (rec,err,None) = userOpHash.toEthSignedMessageHash().tryRecover(userOpSignature) (src/validators/SessionKeyValidator.sol#72)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+INFO:Detectors:
+SmartAccount.execute(address,uint256,bytes) (src/SmartAccount.sol#116-166) has external calls inside a loop: ! IModule(list[i]).preExecute(msg.sender,target,value,data) (src/SmartAccount.sol#132)
+SmartAccount._recordSessionKeySpending(address,uint256) (src/SmartAccount.sol#508-527) has external calls inside a loop: expiry = SessionKeyValidator(validators[i]).sessionExpiry(caller) (src/SmartAccount.sol#515-525)
+	Calls stack containing the loop:
+		SmartAccount.execute(address,uint256,bytes)
+SmartAccount._recordSessionKeySpending(address,uint256) (src/SmartAccount.sol#508-527) has external calls inside a loop: SessionKeyValidator(validators[i]).recordSpending(caller,amount,currentTime) (src/SmartAccount.sol#520)
+	Calls stack containing the loop:
+		SmartAccount.execute(address,uint256,bytes)
+SmartAccount.execute(address,uint256,bytes) (src/SmartAccount.sol#116-166) has external calls inside a loop: postSuccess = IModule(list[i2]).postExecute(msg.sender,target,value,data,res) (src/SmartAccount.sol#156)
+SmartAccount.executeWithSessionKey(address,address,uint256,bytes,uint256) (src/SmartAccount.sol#178-232) has external calls inside a loop: ! IModule(list[i]).preExecute(msg.sender,target,value,data) (src/SmartAccount.sol#198)
+SmartAccount._consumeSessionKeySpendingWithWindow(address,uint256,uint256) (src/SmartAccount.sol#462-477) has external calls inside a loop: expiry = SessionKeyValidator(validators[i]).sessionExpiry(sessionKey) (src/SmartAccount.sol#466-475)
+	Calls stack containing the loop:
+		SmartAccount.executeWithSessionKey(address,address,uint256,bytes,uint256)
+SmartAccount._consumeSessionKeySpendingWithWindow(address,uint256,uint256) (src/SmartAccount.sol#462-477) has external calls inside a loop: SessionKeyValidator(validators[i]).consumeOrRevert(sessionKey,amount,windowTime) (src/SmartAccount.sol#470)
+	Calls stack containing the loop:
+		SmartAccount.executeWithSessionKey(address,address,uint256,bytes,uint256)
+SmartAccount.executeWithSessionKey(address,address,uint256,bytes,uint256) (src/SmartAccount.sol#178-232) has external calls inside a loop: postSuccess = IModule(list[i2]).postExecute(msg.sender,target,value,data,res) (src/SmartAccount.sol#222)
+SmartAccount._preExecuteBatch(SmartAccount.Call[],address[]) (src/SmartAccount.sol#298-323) has external calls inside a loop: SpendingLimitModule(moduleList[j]).preExecuteBatch(msg.sender,totalEthValue) (src/SmartAccount.sol#309-320)
+	Calls stack containing the loop:
+		SmartAccount.executeBatch(SmartAccount.Call[])
+SmartAccount.executeBatch(SmartAccount.Call[]) (src/SmartAccount.sol#238-291) has external calls inside a loop: ! IModule(moduleList[j]).preExecute(msg.sender,calls[i].target,0,calls[i].data) (src/SmartAccount.sol#259)
+SmartAccount.executeBatch(SmartAccount.Call[]) (src/SmartAccount.sol#238-291) has external calls inside a loop: (ok,res) = calls[i].target.call{value: calls[i].value}(calls[i].data) (src/SmartAccount.sol#269)
+SmartAccount.executeBatch(SmartAccount.Call[]) (src/SmartAccount.sol#238-291) has external calls inside a loop: postSuccess = IModule(moduleList[j_scope_0]).postExecute(msg.sender,calls[i].target,calls[i].value,calls[i].data,res) (src/SmartAccount.sol#280)
+SmartAccount.validateUserOp(UserOperation,bytes32,uint256) (src/SmartAccount.sol#326-418) has external calls inside a loop: ISignatureValidator(list[i]).isValidUserOp(userOp.signature,userOpHash) (src/SmartAccount.sol#347)
+SmartAccount.validateUserOp(UserOperation,bytes32,uint256) (src/SmartAccount.sol#326-418) has external calls inside a loop: exp = ISessionKeyExpiry(list[i]).sessionExpiry(rec) (src/SmartAccount.sol#352-354)
+SmartAccount.validateUserOp(UserOperation,bytes32,uint256) (src/SmartAccount.sol#326-418) has external calls inside a loop: expiry = SessionKeyValidator(list[i]).sessionExpiry(rec) (src/SmartAccount.sol#357-396)
+SmartAccount.validateUserOp(UserOperation,bytes32,uint256) (src/SmartAccount.sol#326-418) has external calls inside a loop: ! SessionKeyValidator(list[i]).selectorAllowed(rec,selector) (src/SmartAccount.sol#362)
+SmartAccount.validateUserOp(UserOperation,bytes32,uint256) (src/SmartAccount.sol#326-418) has external calls inside a loop: SessionKeyValidator(list[i]).wouldExceedCap(sessionKey,value,windowTime) (src/SmartAccount.sol#384)
+SmartAccount.validateUserOp(UserOperation,bytes32,uint256) (src/SmartAccount.sol#326-418) has external calls inside a loop: ! SessionKeyValidator(list[i]).isTargetAllowed(sessionKey,target) (src/SmartAccount.sol#389)
+SmartAccount.isValidSignature(bytes32,bytes) (src/SmartAccount.sol#426-451) has external calls inside a loop: ISignatureValidator(validators[i]).isValidUserOp(signature,hash) (src/SmartAccount.sol#444)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+INFO:Detectors:
+Reentrancy in SocialRecoveryModule.executeRecovery() (src/modules/SocialRecoveryModule.sol#251-270):
+	External calls:
+	- SmartAccount(address(account)).transferOwnershipFromRecovery(newOwner,address(this)) (src/modules/SocialRecoveryModule.sol#267)
+	Event emitted after the call(s):
+	- RecoveryExecuted(oldOwner,newOwner) (src/modules/SocialRecoveryModule.sol#269)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+INFO:Detectors:
+SmartAccount._consumeSessionKeySpendingWithWindow(address,uint256,uint256) (src/SmartAccount.sol#462-477) uses timestamp for comparisons
+	Dangerous comparisons:
+	- expiry > 0 && expiry > block.timestamp (src/SmartAccount.sol#467)
+SmartAccount._consumeSessionKeySpending(address,uint256) (src/SmartAccount.sol#485-500) uses timestamp for comparisons
+	Dangerous comparisons:
+	- expiry > 0 && expiry > block.timestamp (src/SmartAccount.sol#490)
+SmartAccount._recordSessionKeySpending(address,uint256) (src/SmartAccount.sol#508-527) uses timestamp for comparisons
+	Dangerous comparisons:
+	- expiry > 0 && expiry > block.timestamp (src/SmartAccount.sol#516)
+SessionKeyModule.preExecute(address,address,uint256,bytes) (src/modules/SessionKeyModule.sol#17-38) uses timestamp for comparisons
+	Dangerous comparisons:
+	- exp <= block.timestamp (src/modules/SessionKeyModule.sol#25)
+SocialRecoveryModule.proposeGuardian(address) (src/modules/SocialRecoveryModule.sol#99-113) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(! guardians[guardian].isActive,Already guardian) (src/modules/SocialRecoveryModule.sol#101)
+	- require(bool,string)(! guardians[guardian].isPending,Already pending) (src/modules/SocialRecoveryModule.sol#102)
+SocialRecoveryModule.activateGuardian(address) (src/modules/SocialRecoveryModule.sol#119-142) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(guardians[guardian].isPending,Not proposed) (src/modules/SocialRecoveryModule.sol#120)
+	- require(bool,string)(! guardians[guardian].isActive,Already active) (src/modules/SocialRecoveryModule.sol#121)
+	- require(bool,string)(block.timestamp >= guardians[guardian].pendingSince + GUARDIAN_ADDITION_DELAY,Delay not met) (src/modules/SocialRecoveryModule.sol#122-125)
+SocialRecoveryModule.addGuardian(address) (src/modules/SocialRecoveryModule.sol#148-171) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(! guardians[guardian].isActive,Already guardian) (src/modules/SocialRecoveryModule.sol#150)
+SocialRecoveryModule.removeGuardian(address) (src/modules/SocialRecoveryModule.sol#177-194) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(guardians[guardian].isActive,Not a guardian) (src/modules/SocialRecoveryModule.sol#178)
+SocialRecoveryModule.initiateRecovery(address) (src/modules/SocialRecoveryModule.sol#214-231) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(activeRecovery.timestamp == 0 || activeRecovery.cancelled || activeRecovery.executed,Recovery pending) (src/modules/SocialRecoveryModule.sol#216)
+SocialRecoveryModule.supportRecovery() (src/modules/SocialRecoveryModule.sol#236-246) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(activeRecovery.timestamp > 0,No active recovery) (src/modules/SocialRecoveryModule.sol#237)
+	- require(bool,string)(! activeRecovery.cancelled,Recovery cancelled) (src/modules/SocialRecoveryModule.sol#238)
+	- require(bool,string)(! activeRecovery.executed,Already executed) (src/modules/SocialRecoveryModule.sol#239)
+SocialRecoveryModule.executeRecovery() (src/modules/SocialRecoveryModule.sol#251-270) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(activeRecovery.timestamp > 0,No active recovery) (src/modules/SocialRecoveryModule.sol#252)
+	- require(bool,string)(! activeRecovery.cancelled,Recovery cancelled) (src/modules/SocialRecoveryModule.sol#253)
+	- require(bool,string)(! activeRecovery.executed,Already executed) (src/modules/SocialRecoveryModule.sol#254)
+	- require(bool,string)(activeRecovery.approvalCount >= threshold,Insufficient approvals) (src/modules/SocialRecoveryModule.sol#255)
+	- require(bool,string)(block.timestamp >= activeRecovery.timestamp + RECOVERY_TIMELOCK,Timelock not expired) (src/modules/SocialRecoveryModule.sol#256-259)
+SocialRecoveryModule.cancelRecovery() (src/modules/SocialRecoveryModule.sol#275-281) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(activeRecovery.timestamp > 0,No active recovery) (src/modules/SocialRecoveryModule.sol#276)
+	- require(bool,string)(! activeRecovery.executed,Already executed) (src/modules/SocialRecoveryModule.sol#277)
+SocialRecoveryModule.getRecoveryRequest() (src/modules/SocialRecoveryModule.sol#295-309) uses timestamp for comparisons
+	Dangerous comparisons:
+	- executable = ! activeRecovery.executed && ! activeRecovery.cancelled && approvalCount >= threshold && block.timestamp >= timestamp + RECOVERY_TIMELOCK (src/modules/SocialRecoveryModule.sol#305-308)
+SpendingLimitModule._rolloverIfNeeded(SpendingLimitModule.Limit) (src/modules/SpendingLimitModule.sol#101-111) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp >= L.windowStart + 86400 (src/modules/SpendingLimitModule.sol#107)
+SpendingLimitModule.isBypassActive() (src/modules/SpendingLimitModule.sol#136-138) uses timestamp for comparisons
+	Dangerous comparisons:
+	- ownerBypassEnabled && block.timestamp <= bypassEnabledUntil (src/modules/SpendingLimitModule.sol#137)
+SpendingLimitModule.preExecute(address,address,uint256,bytes) (src/modules/SpendingLimitModule.sol#140-217) uses timestamp for comparisons
+	Dangerous comparisons:
+	- isBypassActive() && caller == SmartAccount(address(account)).owner() (src/modules/SpendingLimitModule.sol#142)
+SpendingLimitModule.preExecuteBatch(address,uint256) (src/modules/SpendingLimitModule.sol#245-271) uses timestamp for comparisons
+	Dangerous comparisons:
+	- isBypassActive() && caller == SmartAccount(address(account)).owner() (src/modules/SpendingLimitModule.sol#249)
+SpendingLimitModule.wouldExceedEthLimit(uint256) (src/modules/SpendingLimitModule.sol#310-321) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp >= ethLimit.windowStart + 86400 (src/modules/SpendingLimitModule.sol#316)
+SessionKeyValidator.grant(address,uint64) (src/validators/SessionKeyValidator.sol#50-57) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(expiry > block.timestamp + 60,expiry too soon) (src/validators/SessionKeyValidator.sol#53)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+INFO:Detectors:
+SocialRecoveryModule.account (src/modules/SocialRecoveryModule.sol#37) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+INFO:Slither:. analyzed (23 contracts with 80 detectors), 54 result(s) found

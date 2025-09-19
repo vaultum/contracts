@@ -1,0 +1,2 @@
+=== AUDITOR REQUIRED: GREP CHECK FOR BLOCK.TIMESTAMP IN VALIDATION ===
+✅ NO block.timestamp found in validation paths
