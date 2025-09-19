@@ -164,6 +164,15 @@ forge verify-contract $CONTRACT_ADDRESS SmartAccount --chain-id 1
 - [Integration Guide](https://docs.vaultum.app/integration)
 - [Security Best Practices](https://docs.vaultum.app/security)
 
+## 🛡️ Security
+
+Security is our top priority. Please review our [Security Policy](SECURITY.md) for:
+- **Vulnerability reporting**: Responsible disclosure process
+- **Bug bounty program**: Rewards for security research
+- **Security features**: Built-in protections and safeguards
+
+**Found a security issue?** Email: security@vaultum.app
+
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
