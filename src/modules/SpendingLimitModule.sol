@@ -168,6 +168,7 @@ contract SpendingLimitModule is IModule {
         }
         
         // NEW: Handle native ETH spending limits
+        // Note: For batch calls, ETH limits are checked in preExecuteBatch to avoid double counting
         if (value > 0) {
             Limit storage ethLimit = limits[address(0)]; // Use address(0) for ETH
             if (ethLimit.cap > 0) { // If ETH limit is set
@@ -233,6 +234,40 @@ contract SpendingLimitModule is IModule {
 
     function postExecute(address, address, uint256, bytes calldata, bytes calldata) external override returns (bool) {
         return true;
+    }
+    
+    /**
+     * @notice AUDITOR P3: Check aggregate ETH spending for batch execution
+     * @param caller Address initiating the batch
+     * @param totalEthValue Total ETH value across all batch calls
+     * @dev This prevents ETH limit bypass via batch splitting
+     */
+    function preExecuteBatch(address caller, uint256 totalEthValue) external {
+        require(msg.sender == account, "Only account");
+        
+        // Check if owner bypass is active
+        if (isBypassActive() && caller == SmartAccount(payable(account)).owner()) {
+            emit LimitBypassed(caller, address(0), totalEthValue);
+            return; // Owner bypass active, skip limits
+        }
+        
+        // Apply ETH limit to aggregate value
+        if (totalEthValue > 0) {
+            Limit storage ethLimit = limits[address(0)]; // Use address(0) for ETH
+            if (ethLimit.cap > 0) { // If ETH limit is set
+                _rolloverIfNeeded(ethLimit);
+                unchecked {
+                    uint256 newSpent = ethLimit.spentInWindow + totalEthValue;
+                    if (newSpent > ethLimit.cap) {
+                        emit EthLimitExceeded(newSpent, ethLimit.cap);
+                        revert SpendingLimitExceeded();
+                    }
+                    ethLimit.spentInWindow = newSpent;
+                }
+                emit EthSpent(caller, totalEthValue);
+                emit Spent(address(0), ethLimit.spentInWindow);
+            }
+        }
     }
     
     // ============ View Functions ============

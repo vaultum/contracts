@@ -16,6 +16,11 @@ contract SessionKeyValidator is ISignatureValidator {
     event SessionGranted(address indexed key, uint64 expiry);
     event SessionRevoked(address indexed key);
     event SelectorAllowed(address indexed key, bytes4 indexed sel, bool allowed);
+    
+    // AUDITOR REQUIRED: Security events for future session key caps
+    event CapExceeded(address indexed key, uint256 attempted, uint256 cap);
+    event CapConsumed(address indexed key, uint256 amount, uint256 newTotal);
+    event AllowlistViolation(address indexed key, address indexed target);
 
     modifier onlyAccount() {
         require(msg.sender == account, "not account");

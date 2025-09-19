@@ -12,6 +12,7 @@ import {ModuleManagerOptimized} from "./modules/ModuleManagerOptimized.sol";
 import {ValidatorManager} from "./validators/ValidatorManager.sol";
 import {ISignatureValidator} from "./validators/ISignatureValidator.sol";
 import {SessionKeyValidator} from "./validators/SessionKeyValidator.sol";
+import {SpendingLimitModule, SpendingLimitExceeded} from "./modules/SpendingLimitModule.sol";
 
 contract SmartAccount is IAccount, IERC1271, ModuleManagerOptimized, ValidatorManager, ReentrancyGuard {
     using ECDSA for bytes32;
@@ -168,15 +169,19 @@ contract SmartAccount is IAccount, IERC1271, ModuleManagerOptimized, ValidatorMa
         results = new bytes[](calls.length);
         address[] memory moduleList = getModules();
         
+        // AUDITOR P3: Check aggregate ETH spending limits for batch
+        _preExecuteBatch(calls, moduleList);
+        
         for (uint256 i = 0; i < calls.length; i++) {
             require(calls[i].target != address(0), "zero target");
             
             // Set depth before module hooks
             _moduleExecutionDepth = 1;
             
-            // Check all modules for each call
+            // Check all modules for each call 
+            // Note: ETH limits already checked in batch aggregate, so individual calls use value=0 for limit checks
             for (uint256 j = 0; j < moduleList.length; j++) {
-                if (!IModule(moduleList[j]).preExecute(msg.sender, calls[i].target, calls[i].value, calls[i].data)) {
+                if (!IModule(moduleList[j]).preExecute(msg.sender, calls[i].target, 0, calls[i].data)) {
                     _moduleExecutionDepth = 0;
                     revert BlockedByModule();
                 }
@@ -208,6 +213,38 @@ contract SmartAccount is IAccount, IERC1271, ModuleManagerOptimized, ValidatorMa
         }
         
         return results;
+    }
+    
+    /**
+     * @notice AUDITOR P3: Check aggregate ETH spending limits across batch calls
+     * @param calls The batch calls to check
+     * @param moduleList List of active modules
+     */
+    function _preExecuteBatch(Call[] calldata calls, address[] memory moduleList) private {
+        // Calculate total ETH value across all calls
+        uint256 totalEthValue = 0;
+        for (uint256 i = 0; i < calls.length; i++) {
+            totalEthValue += calls[i].value;
+        }
+        
+        // Check ETH limits with SpendingLimitModule if present and has ETH value
+        if (totalEthValue > 0) {
+            for (uint256 j = 0; j < moduleList.length; j++) {
+                // Try to call SpendingLimitModule's batch ETH check
+                try SpendingLimitModule(moduleList[j]).preExecuteBatch(msg.sender, totalEthValue) {
+                    // Batch check succeeded, continue
+                } catch (bytes memory reason) {
+                    // If it's a SpendingLimitExceeded error, re-throw it
+                    if (reason.length >= 4) {
+                        bytes4 selector = bytes4(reason);
+                        if (selector == SpendingLimitExceeded.selector) {
+                            revert SpendingLimitExceeded();
+                        }
+                    }
+                    // Otherwise ignore (module doesn't support batch checking)
+                }
+            }
+        }
     }
 
     /// @notice ERC 4337 callback. Not view anymore, because it may pay missing funds to EntryPoint.
