@@ -67,3 +67,6 @@ deploy/production/
 kubernetes/secrets/
 terraform/*.tfvars
 ansible/vault/
+# Sensitive deployment artifacts
+bytecode-verification.json
+entrypoint-status.json
