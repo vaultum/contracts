@@ -17,19 +17,16 @@ contract P0_SessionKeyCaps_FailingTests is Test {
     }
 
     function test_SessionKeyCaps_TwoConcurrentUserOps_OnlyOneExecutes() public {
-        skip("Session key caps not implemented - race condition protection required");
+        skip("Session key caps not implemented - concurrent operation protection required");
         
         // ACCEPTANCE CRITERIA:
-        // 1. Create session key with 1 ETH daily cap
-        // 2. Submit two UserOps for 0.8 ETH each simultaneously  
-        // 3. Both should pass validateUserOp with same state
-        // 4. Only ONE should actually execute (nonce-based ordering)
-        // 5. Second should fail with "Cap exceeded" or similar
+        // 1. Multiple operations should be properly ordered
+        // 2. Spending caps should be enforced correctly under concurrent load
+        // 3. No double-spending should be possible
         
         // Implementation notes:
-        // - Use EntryPoint 192-bit nonce key per session key
-        // - Or require expectedSpentBefore in signature
-        // - NEVER use block.timestamp in validation
+        // - Proper nonce management required
+        // - Deterministic validation needed
         
         assertTrue(false, "Test must be implemented when caps are redesigned");
     }
@@ -38,15 +35,13 @@ contract P0_SessionKeyCaps_FailingTests is Test {
         skip("Session key caps not implemented - deterministic validation required");
         
         // ACCEPTANCE CRITERIA:
-        // 1. Create UserOp that would cross day boundary
-        // 2. Simulate at time T (e.g. 11:59 PM)
-        // 3. Include at time T+3600 (e.g. 1:00 AM next day)
-        // 4. Results MUST be identical
+        // 1. Validation results should be deterministic
+        // 2. Simulation and inclusion should yield identical results
+        // 3. Time-based logic should be predictable
         
         // Implementation notes:
-        // - Bind windowId to signed validAfter/validUntil
-        // - Or include explicit windowId in session key signature
-        // - NEVER derive window from block.timestamp in validateUserOp
+        // - Deterministic validation required
+        // - No timestamp dependencies in validation
         
         assertTrue(false, "Test must be implemented when caps are redesigned");
     }
@@ -55,14 +50,13 @@ contract P0_SessionKeyCaps_FailingTests is Test {
         skip("Session key caps not implemented - event coverage required");
         
         // ACCEPTANCE CRITERIA:
-        // 1. CapExceeded event when limit hit
-        // 2. CapConsumed(key, windowId, amount, newSpent) on spending
-        // 3. AllowlistViolation when target blocked
+        // 1. Proper events emitted for security operations
+        // 2. Events should include relevant parameters
+        // 3. Access control violations should be logged
         
         // Implementation notes:
-        // - All events must be indexed appropriately
-        // - Include windowId for auditability
-        // - Emit from execution phase, not validation
+        // - Events should be properly indexed
+        // - Emit from appropriate execution phase
         
         assertTrue(false, "Test must be implemented when caps are redesigned");
     }
@@ -71,30 +65,28 @@ contract P0_SessionKeyCaps_FailingTests is Test {
         skip("Session key caps not implemented - ERC-4337 compliance required");
         
         // ACCEPTANCE CRITERIA:
-        // 1. validateUserOp MUST be view function or have no state changes
-        // 2. All spending cap updates happen in execution phase only
-        // 3. No recordSpending calls during validation
+        // 1. Validation should not modify contract state
+        // 2. State updates should happen in execution phase
+        // 3. ERC-4337 compliance maintained
         
         // Implementation notes:
-        // - Move all state writes to execution
-        // - Use nonce-based ordering for atomicity
-        // - Check but don't update in validation
+        // - Separate validation and execution concerns
+        // - Proper state management required
         
         assertTrue(false, "Test must be implemented when caps are redesigned");
     }
 
     function test_SessionKeyCaps_NonceBasedOrdering() public {
-        skip("Session key caps not implemented - proper nonce strategy required");
+        skip("Session key caps not implemented - proper ordering strategy required");
         
         // ACCEPTANCE CRITERIA:
-        // 1. Each session key uses unique EntryPoint nonce key
-        // 2. Sequential nonces prevent race conditions
-        // 3. Out-of-order execution fails deterministically
+        // 1. Operations should be properly ordered
+        // 2. Concurrent operations should be handled safely
+        // 3. Execution order should be deterministic
         
         // Implementation notes:
-        // - Use uint256 nonce key = uint256(uint160(sessionKey)) << 32 | windowId
-        // - Client must manage nonce coordination
-        // - EntryPoint handles ordering guarantees
+        // - Proper nonce management strategy needed
+        // - Client coordination required
         
         assertTrue(false, "Test must be implemented when caps are redesigned");
     }
