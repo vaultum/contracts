@@ -1,0 +1,10 @@
+V2 RUNTIME BYTECODE VERIFICATION (OpenZeppelin v5.2.0)
+========================================================
+Contract                               On-chain(Bytes)  Local(Bytes)    Hash(on)                         Hash(local)
+0xB7747367A657532b744ff4676C3C86866FBA6141  10535           10535          da7ecbacafcd7dc9d89ea6e069af31139e5a2351c34550ac07a81745ab6a71b9  da7ecbacafcd7dc9d89ea6e069af31139e5a2351c34550ac07a81745ab6a71b9
+0x80D65Fa661038079e92aE708498d55d35617405D  5240            5240           90aeb459aa2b09b3e19e702a17c42dd6571e288d3221e7729bc3916e6bb3d5e3  90aeb459aa2b09b3e19e702a17c42dd6571e288d3221e7729bc3916e6bb3d5e3
+0x82D68EE4Bf9a1F3a4174257a94F4E6a2f40eE209  4145            4145           04b1c5c84d67280b2f172b01673e669d6a5b3cce3a5584a5618d68ea8137b322  a0fa1e7dfef0a6bd8f74fc62e0ea750dabcc64692b2d48f2102ec3d80e40df56
+0xF80C03D69c9B264FC30b0D9E3EbC12548C13864f  1012            1012           6c7aa5392eb07c4f95e9b80728a2dd4410ed150f398750a4029133c9943e4890  de089bd04b2dd68204f6d50c931560eccd5f85d33807669ce464f94699b599e8
+0xbF23835e96A7afBf29585D39B186B3284eD1111E  4253            4253           26997335e17caef33e81950e4c046fa16c4b676946e8fd9afaf1729e968e2d0f  7eac97c412644b474adc3ec5a7405818dc4733aa821dbac8dc953b8c01b33953
+
+Expected: Perfect size and hash matches (repository-deployment alignment)
