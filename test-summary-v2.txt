@@ -1,0 +1,10 @@
+Encountered 2 failing tests in test/modules/SessionKeyValidator.t.sol:SessionKeyValidatorTest
+[FAIL: Validation should succeed: 126275202967027343035716573231519569181292227645669376 != 0] testEndToEndValidationWithSmartAccount() (gas: 132711)
+[FAIL: assertion failed] testValidateFailsAfterExpiry() (gas: 47918)
+
+Encountered 3 failing tests in test/validators/SessionKeyValidator.t.sol:SessionKeyValidatorTest
+[FAIL: Expired key should fail validation: 126275202967027343035716573231519569181292227645669376 != 1] testExpiredKeyFails() (gas: 74009)
+[FAIL: Second validator's session key should work: 126275202967027343035716573231519569181292227645669376 != 0] testMultipleValidators() (gas: 1018993)
+[FAIL: Session key signature should be accepted: 126275202967027343035716573231519569181292227645669376 != 0] testSessionKeySignatureAccepted() (gas: 73485)
+
+Encountered a total of 7 failing tests, 177 tests succeeded

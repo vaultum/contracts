@@ -1,0 +1,54 @@
+# Gitleaks Configuration for Vaultum Contracts
+
+# Allow test private keys that are clearly marked as test-only
+[[rules.allowlist]]
+description = "Allow standard Foundry test private keys"
+regex = '''0x(A11CE|BEEF|DEAD|1234567890123456789012345678901234567890)'''
+path = '''test/.*\.sol$'''
+
+[[rules.allowlist]]
+description = "Allow vm.addr and makeAddr test utilities"
+regex = '''vm\.(addr|makeAddr)'''
+path = '''test/.*\.sol$'''
+
+[[rules.allowlist]]
+description = "Allow contract addresses in deployment artifacts"
+regex = '''0x[a-fA-F0-9]{40}'''
+path = '''deployments/.*\.json$'''
+
+[[rules.allowlist]]
+description = "Allow Ethereum addresses in documentation"
+regex = '''0x[a-fA-F0-9]{40}'''
+path = '''.*\.(md|txt)$'''
+
+# Block real private key patterns
+[[rules.extend]]
+id = "private-key-strict"
+description = "Detect potential private key assignments"
+regex = '''PRIVATE_KEY\s*=\s*["\']0x[a-fA-F0-9]{64}["\']'''
+tags = ["key", "private"]
+
+[[rules.extend]]
+id = "env-private-key"
+description = "Detect private keys in environment files"
+regex = '''PRIVATE_KEY\s*=\s*0x[a-fA-F0-9]{64}'''
+path = '''\.env.*'''
+
+# Custom rules for sensitive content
+[[rules.extend]]
+id = "audit-docs"
+description = "Block audit documentation patterns"
+regex = '''AUDIT.*\.md|CRITICAL.*\.md|SECURITY.*\.md|POC.*\.md|EXPLOIT.*\.md'''
+tags = ["audit", "sensitive"]
+
+[[rules.extend]]
+id = "attack-terminology"
+description = "Block attack methodology descriptions"
+regex = '''(?i)(step\s+\d+.*exploit|attack\s+vector|vulnerability\s+here|exploit\s+this)'''
+path = '''test/.*\.sol$'''
+tags = ["methodology", "sensitive"]
+
+# Entropy thresholds
+[rules.extend.entropy]
+min = 3.0
+max = 7.0

@@ -2,7 +2,7 @@
   "chain": "sepolia",
   "chainId": 11155111,
   "deployer": "0x8F699654a85f0c2869f599e29E803dA3089E06fd",
-  "timestamp": 1758440040,
+  "timestamp": 1758439848,
   "contracts": {
     "SmartAccount": "0xB7747367A657532b744ff4676C3C86866FBA6141",
     "SocialRecoveryModule": "0x80D65Fa661038079e92aE708498d55d35617405D",

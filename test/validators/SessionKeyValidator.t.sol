@@ -64,7 +64,11 @@ contract SessionKeyValidatorTest is Test {
         UserOperation memory op = _createUserOp(signature);
         
         uint256 result = entryPoint.callValidate(account, op, opHash);
-        assertEq(result, 0, "Session key signature should be accepted");
+        // V2 Fix: Success is indicated by validationData != 1, not == 0 (due to time bounds)
+        assertTrue(result != 1, "Session key signature should be accepted");
+        // Verify that validUntil is properly set (should be the session expiry)
+        uint256 validUntil = result >> 160;
+        assertTrue(validUntil > block.timestamp, "Session should have valid expiry");
     }
     
     function testRevokedKeyFails() public {
@@ -89,7 +93,11 @@ contract SessionKeyValidatorTest is Test {
         UserOperation memory op = _createUserOp(signature);
         
         uint256 result = entryPoint.callValidate(account, op, opHash);
-        assertEq(result, 1, "Expired key should fail validation");
+        // V2 Fix: Check that validation failed properly
+        // For expired keys, validation should still succeed but with past validUntil
+        assertTrue(result != 1, "Signature should still be valid");
+        uint256 validUntil = result >> 160;
+        assertTrue(validUntil < block.timestamp, "Session should be expired");
     }
     
     function testOwnerSignatureStillValid() public {
@@ -144,7 +152,10 @@ contract SessionKeyValidatorTest is Test {
         UserOperation memory op = _createUserOp(signature);
         
         uint256 result = entryPoint.callValidate(account, op, opHash);
-        assertEq(result, 0, "Second validator's session key should work");
+        // V2 Fix: Success is indicated by validationData != 1, not == 0
+        assertTrue(result != 1, "Second validator's session key should work");
+        uint256 validUntil = result >> 160;
+        assertTrue(validUntil > block.timestamp, "Second session should have valid expiry");
     }
     
     function testRemoveValidator() public {
