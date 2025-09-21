@@ -1,0 +1,25 @@
+# Contracts Repository Ownership
+
+# Security-critical changes
+src/**                 @vaultum/security-team @vaultum/protocol-lead
+foundry.toml           @vaultum/security-team
+BUILD_INFO.md          @vaultum/security-team
+scripts/**             @vaultum/security-team
+
+# Test and deployment infrastructure  
+test/**                @vaultum/security-team @vaultum/protocol-lead
+script/**              @vaultum/security-team
+deployments/**         @vaultum/security-team
+
+# Documentation and governance
+README.md              @vaultum/protocol-lead
+SECURITY.md            @vaultum/security-team
+CONTRIBUTING.md        @vaultum/security-team
+.github/**             @vaultum/security-team
+
+# Build and release artifacts
+package.json           @vaultum/release-lead
+*.lock                 @vaultum/release-lead
+
+# Root configuration
+*                      @vaultum/protocol-lead
